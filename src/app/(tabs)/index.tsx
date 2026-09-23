@@ -1,60 +1,65 @@
-// app/(tabs)/index.tsx
-import React, { useState, useEffect } from "react";
-import { ScrollView, useWindowDimensions, StyleSheet } from "react-native";
+// src/app/(tabs)/index.tsx
+import { useState, useEffect } from "react";
+import { View, Text, ActivityIndicator, Button } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import WeatherCard from "../../components/WeatherCard";
 import SearchBox from "../../components/SearchBox";
-import RiwayatList from "../../components/RiwayatList";
-import IndikatorAQI from "../../components/IndikatorAQI";
+import WeatherCard from "../../components/WeatherCard";
+import { useDebounce } from "../../hooks/use-debounce";
+import { cariKota } from "../../services/geocodingService";
+import { HasilGeocoding } from "../../types/geocoding";
 
 export default function HalamanUtama() {
-  const [kotaAktif, setKotaAktif] = useState("Pekalongan");
-  const [riwayat, setRiwayat] = useState<string[]>(["Pekalongan"]);
+  const [teksCari, setTeksCari] = useState("");
+  const [hasil, setHasil] = useState<HasilGeocoding[]>([]);
+  const [sedangMemuat, setSedangMemuat] = useState(false);
+  const [pesanError, setPesanError] = useState<string | null>(null);
   
-  const { width } = useWindowDimensions();
-  const isTablet = width > 768;
+  const teksTertunda = useDebounce(teksCari, 500);
 
   useEffect(() => {
-    console.log("Kota aktif berubah menjadi:", kotaAktif);
-  }, [kotaAktif]);
+    if (teksTertunda.trim().length === 0) {
+      setHasil([]);
+      setPesanError(null);
+      return;
+    }
+    ambilData(teksTertunda);
+  }, [teksTertunda]);
 
-  function handleCari(kota: string) {
-    if (!kota) return;
-    setKotaAktif(kota);
-    if (!riwayat.includes(kota)) {
-      setRiwayat([...riwayat, kota]);
+  async function ambilData(nama: string) {
+    setSedangMemuat(true);
+    setPesanError(null);
+    try {
+      const data = await cariKota(nama);
+      setHasil(data);
+    } catch (err) {
+      setPesanError("Gagal mengambil data. Periksa koneksi internet Anda.");
+    } finally {
+      setSedangMemuat(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.container,
-          { padding: isTablet ? 32 : 16 },
-        ]}
-      >
-        <SearchBox onCari={handleCari} />
-        <WeatherCard kota={kotaAktif} suhu={29} tingkatAQI="BAIK" />
-        <IndikatorAQI
-          kota={kotaAktif}
-          indeksAQI={42}
-          tingkat="BAIK"
-          diperbaruiPada="10:00 WIB"
-        />
-        <RiwayatList daftarKota={riwayat} />
-      </ScrollView>
+    <SafeAreaView style={{ flex: 1, padding: 16, gap: 16 }}>
+    <SearchBox onCari={setTeksCari} />
+      
+      {sedangMemuat && <ActivityIndicator />}
+      
+      {pesanError && (
+        <View>
+          <Text>{pesanError}</Text>
+          <Button title="Coba Lagi" onPress={() => ambilData(teksTertunda)} />
+        </View>
+      )}
+
+      {!sedangMemuat && !pesanError && teksTertunda.length > 0 && hasil.length === 0
+  && (
+      <Text>Kota tidak ditemukan</Text>
+    )}
+
+      {hasil.map((kota) => (
+    <WeatherCard key={kota.id} kota={kota.name} suhu={29} tingkatAQI="BAIK" />
+    ))}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  container: {
-    gap: 16,
-  },
-});
