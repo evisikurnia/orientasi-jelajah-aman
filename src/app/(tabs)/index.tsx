@@ -15,7 +15,8 @@ export default function HalamanUtama() {
   const [sedangMemuat, setSedangMemuat] = useState(false);
   const [pesanError, setPesanError] = useState<string | null>(null);
   
-  const teksTertunda = useDebounce(teksCari, 500);
+  // 2. Ubah delay debounce dari 500ms menjadi 800ms
+  const teksTertunda = useDebounce(teksCari, 800);
 
   useEffect(() => {
     if (teksTertunda.trim().length === 0) {
@@ -41,25 +42,47 @@ export default function HalamanUtama() {
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16, gap: 16 }}>
-    <SearchBox onCari={setTeksCari} />
+      <SearchBox onCari={setTeksCari} />
       
-      {sedangMemuat && <ActivityIndicator />}
+      {/* Kondisi 1: Memuat Data */}
+      {sedangMemuat && <ActivityIndicator size="large" />}
       
+      {/* Kondisi 2: Pesan Error dengan accessibilityLabel */}
       {pesanError && (
-        <View>
-          <Text>{pesanError}</Text>
+        <View style={{ alignItems: "center", gap: 8 }}>
+          <Text 
+            accessibilityLabel={`Pesan Kesalahan: ${pesanError}`}
+            style={{ color: "red", textAlign: "center" }}
+          >
+            {pesanError}
+          </Text>
           <Button title="Coba Lagi" onPress={() => ambilData(teksTertunda)} />
         </View>
       )}
 
-      {!sedangMemuat && !pesanError && teksTertunda.length > 0 && hasil.length === 0
-  && (
-      <Text>Kota tidak ditemukan</Text>
-    )}
+      {/* Kondisi 3: Pesan Kosong dengan accessibilityLabel */}
+      {!sedangMemuat && !pesanError && teksTertunda.length > 0 && hasil.length === 0 && (
+        <Text 
+          accessibilityLabel={`Pesan Kosong: Kota ${teksTertunda} tidak ditemukan`}
+          style={{ textAlign: "center", color: "#666666" }}
+        >
+          Kota "{teksTertunda}" tidak ditemukan
+        </Text>
+      )}
 
-      {hasil.map((kota) => (
-    <WeatherCard key={kota.id} kota={kota.name} suhu={29} tingkatAQI="BAIK" />
-    ))}
+      {/* Kondisi 4: Hasil Ditemukan */}
+      {!sedangMemuat && !pesanError && hasil.length > 0 && (
+        <View style={{ gap: 8 }}>
+          {/* 1. Indikator jumlah hasil */}
+          <Text style={{ fontWeight: "bold", color: "#666666" }}>
+            Ditemukan {hasil.length} kota
+          </Text>
+
+          {hasil.map((kota) => (
+            <WeatherCard key={kota.id} kota={kota.name} suhu={29} tingkatAQI="BAIK" />
+          ))}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
