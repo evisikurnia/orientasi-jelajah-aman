@@ -1,12 +1,7 @@
 // src/app/(tabs)/index.tsx
 import { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Button,
-  TouchableOpacity,
-} from "react-native";
+import { mintaIzinLokasi, ambilKoordinatSaatIni } from "../../services/locationService";
+import { View, Text, ActivityIndicator, Button, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import SearchBox from "../../components/SearchBox";
@@ -19,26 +14,21 @@ import { ambilKualitasUdara } from "../../services/airQualityService";
 import { konversiTingkatAQI } from "../../services/weatherAdapter";
 import { labelKodeCuaca } from "../../constants/weatherCodes";
 import { HasilGeocoding } from "../../types/geocoding";
-import {
-  DataCuacaLengkap,
-  DataKualitasUdara,
-} from "../../types/weather";
+import { DataCuacaLengkap, DataKualitasUdara } from "../../types/weather";
 
 export default function HalamanUtama() {
   const [teksCari, setTeksCari] = useState("");
   const [hasilPencarian, setHasilPencarian] = useState<HasilGeocoding[]>([]);
-  const [kotaTerpilih, setKotaTerpilih] =
-    useState<HasilGeocoding | null>(null);
-
+  const [kotaTerpilih, setKotaTerpilih] = useState<HasilGeocoding | null>(null);
   const [cuaca, setCuaca] = useState<DataCuacaLengkap | null>(null);
-  const [kualitasUdara, setKualitasUdara] =
-    useState<DataKualitasUdara | null>(null);
+  const [kualitasUdara, setKualitasUdara] = useState<DataKualitasUdara | null>(null);
 
   const [sedangMemuat, setSedangMemuat] = useState(false);
   const [pesanError, setPesanError] = useState<string | null>(null);
 
+  const [pesanLokasi, setPesanLokasi] = useState<string | null>(null);
+  
   const teksTertunda = useDebounce(teksCari, 500);
-
   // Pencegah race condition
   const requestIdRef = useRef(0);
 
@@ -85,6 +75,29 @@ export default function HalamanUtama() {
     }
   }
 
+  async function gunakanLokasiSaatIni() {
+    const status = await mintaIzinLokasi();
+
+    if (status === "denied") {
+      setPesanLokasi("Izin lokasi ditolak. Silakan cari kota secara manual di atas.");
+      return;
+      }
+      if (status === "unavailable") {
+        setPesanLokasi("Layanan lokasi tidak aktif di perangkat ini. Silakan cari kota secara manual.");
+      return;
+      }
+
+      setPesanLokasi(null);
+      const koordinat = await ambilKoordinatSaatIni();
+      pilihKota({
+        id: -1,
+        name: "Lokasi Saat Ini",
+        latitude: koordinat.latitude,
+        longitude: koordinat.longitude,
+        country: "",
+      });
+      }
+
   return (
     <SafeAreaView
       style={{
@@ -95,6 +108,9 @@ export default function HalamanUtama() {
     >
       <SearchBox onCari={setTeksCari} />
 
+      <Button title="Gunakan Lokasi Saat Ini" onPress={gunakanLokasiSaatIni} />
+      {pesanLokasi && <Text>{pesanLokasi}</Text>}
+      
       {/* Hasil pencarian kota */}
       {hasilPencarian.map((kota) => (
         <TouchableOpacity
