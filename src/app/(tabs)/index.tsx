@@ -1,6 +1,6 @@
 // src/app/(tabs)/index.tsx
-import { router } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { mintaIzinLokasi, ambilKoordinatSaatIni } from "../../services/locationService";
 import { View, Text, ActivityIndicator, Button, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +14,7 @@ import { ambilCuaca } from "../../services/weatherService";
 import { ambilKualitasUdara } from "../../services/airQualityService";
 import { konversiTingkatAQI } from "../../services/weatherAdapter";
 import { labelKodeCuaca } from "../../constants/weatherCodes";
+import { ambilSemuaFavorit } from "../../services/favoritStorage";
 import { HasilGeocoding } from "../../types/geocoding";
 import { DataCuacaLengkap, DataKualitasUdara } from "../../types/weather";
 
@@ -26,9 +27,11 @@ export default function HalamanUtama() {
 
   const [sedangMemuat, setSedangMemuat] = useState(false);
   const [pesanError, setPesanError] = useState<string | null>(null);
-
   const [pesanLokasi, setPesanLokasi] = useState<string | null>(null);
-  
+
+  // Status Cek Duplikat Favorit
+  const [sudahFavorit, setSudahFavorit] = useState(false);
+
   const teksTertunda = useDebounce(teksCari, 500);
   // Pencegah race condition
   const requestIdRef = useRef(0);
@@ -43,6 +46,24 @@ export default function HalamanUtama() {
       .then(setHasilPencarian)
       .catch(() => setHasilPencarian([]));
   }, [teksTertunda]);
+
+  // 3. Latihan Mandiri: Cek apakah kota terpilih sudah ada di favorit
+  useFocusEffect(
+    useCallback(() => {
+      async function cekStatusFavorit() {
+        if (kotaTerpilih) {
+          const daftarFavorit = await ambilSemuaFavorit();
+          const ada = daftarFavorit.some(
+            (item) => String(item.id) === String(kotaTerpilih.id)
+          );
+          setSudahFavorit(ada);
+        } else {
+          setSudahFavorit(false);
+        }
+      }
+      cekStatusFavorit();
+    }, [kotaTerpilih])
+  );
 
   async function pilihKota(kota: HasilGeocoding) {
     setKotaTerpilih(kota);
@@ -82,29 +103,33 @@ export default function HalamanUtama() {
     if (status === "denied") {
       setPesanLokasi("Izin lokasi ditolak. Silakan cari kota secara manual di atas.");
       return;
-      }
-      if (status === "unavailable") {
-        setPesanLokasi("Layanan lokasi tidak aktif di perangkat ini. Silakan cari kota secara manual.");
+    }
+    if (status === "unavailable") {
+      setPesanLokasi("Layanan lokasi tidak aktif di perangkat ini. Silakan cari kota secara manual.");
       return;
-      }
+    }
 
-      setPesanLokasi(null);
-      const koordinat = await ambilKoordinatSaatIni();
-      pilihKota({
-        id: -1,
-        name: "Lokasi Saat Ini",
-        latitude: koordinat.latitude,
-        longitude: koordinat.longitude,
-        country: "",
-      });
-      }
+    setPesanLokasi(null);
+    const koordinat = await ambilKoordinatSaatIni();
+    pilihKota({
+      id: -1,
+      name: "Lokasi Saat Ini",
+      latitude: koordinat.latitude,
+      longitude: koordinat.longitude,
+      country: "",
+    });
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16, gap: 16 }}>
       <SearchBox onCari={setTeksCari} />
 
       <Button title="Gunakan Lokasi Saat Ini" onPress={gunakanLokasiSaatIni} />
-      {pesanLokasi && <Text>{pesanLokasi}</Text>}
+      {pesanLokasi && (
+        <Text accessibilityLabel={`Pesan Lokasi: ${pesanLokasi}`}>
+          {pesanLokasi}
+        </Text>
+      )}
       
       {/* Hasil pencarian kota */}
       {hasilPencarian.map((kota) => (
@@ -122,7 +147,9 @@ export default function HalamanUtama() {
       {/* Pesan error */}
       {pesanError && (
         <View>
-          <Text>{pesanError}</Text>
+          <Text accessibilityLabel={`Pesan Kesalahan: ${pesanError}`}>
+            {pesanError}
+          </Text>
 
           <Button
             title="Coba Lagi"
@@ -133,43 +160,36 @@ export default function HalamanUtama() {
         </View>
       )}
 
-      {/* Weather Card */}
+      {/* Weather Card & Tombol Tambah Favorit (Di-disable jika sudah ada di favorit) */}
       {cuaca && kualitasUdara && kotaTerpilih && !sedangMemuat && (
-      <>
-        <WeatherCard
-        kota={kotaTerpilih.name}
-        suhu={cuaca.saatIni.suhu}
-        tingkatAQI={konversiTingkatAQI(kualitasUdara.indeksAQI)}
-        />
-        <Button
-        title="Tambahkan ke Favorit"
-        onPress={() =>
-          router.push({
-            pathname: "/tambah-favorit",
-            params: {
-              id: String(kotaTerpilih.id),
-              nama: kotaTerpilih.name,
-              lat: String(kotaTerpilih.latitude),
-              lon: String(kotaTerpilih.longitude),
-            },
-          })
-        }
-        />
-      </>
-  )}
+        <>
+          <WeatherCard
+            kota={kotaTerpilih.name}
+            suhu={cuaca.saatIni.suhu}
+            tingkatAQI={konversiTingkatAQI(kualitasUdara.indeksAQI)}
+          />
+          <Button
+            title={sudahFavorit ? "Sudah di Favorit" : "Tambahkan ke Favorit"}
+            disabled={sudahFavorit}
+            onPress={() =>
+              router.push({
+                pathname: "/tambah-favorit",
+                params: {
+                  id: String(kotaTerpilih.id),
+                  nama: kotaTerpilih.name,
+                  lat: String(kotaTerpilih.latitude),
+                  lon: String(kotaTerpilih.longitude),
+                },
+              })
+            }
+          />
+        </>
+      )}
 
-      {/* =========================================
-          1. SUHU MAKSIMAL / MINIMAL HARIAN
-          ========================================= */}
+      {/* 1. SUHU MAKSIMAL / MINIMAL HARIAN */}
       {cuaca && (
-        <Text
-          style={{
-            fontSize: 13,
-            color: "#555555",
-          }}
-        >
-          Suhu Hari Ini: Max{" "}
-          {cuaca.harian.suhuMaksimal[0]}°C
+        <Text style={{ fontSize: 13, color: "#555555" }}>
+          Suhu Hari Ini: Max {cuaca.harian.suhuMaksimal[0]}°C
           {" / "}
           Min {cuaca.harian.suhuMinimal[0]}°C
         </Text>
@@ -177,28 +197,15 @@ export default function HalamanUtama() {
 
       {/* Kondisi cuaca dan angin */}
       {cuaca && (
-        <Text
-          style={{
-            fontSize: 12,
-            color: "#888888",
-          }}
-        >
-          Kondisi:{" "}
-          {labelKodeCuaca(cuaca.saatIni.kodeCuaca)} • Angin{" "}
+        <Text style={{ fontSize: 12, color: "#888888" }}>
+          Kondisi: {labelKodeCuaca(cuaca.saatIni.kodeCuaca)} • Angin{" "}
           {cuaca.saatIni.kecepatanAngin} km/j
         </Text>
       )}
 
-      {/* =========================================
-          2. PM2.5 DAN PM10
-          ========================================= */}
+      {/* 2. PM2.5 DAN PM10 */}
       {kualitasUdara && (
-        <Text
-          style={{
-            fontSize: 12,
-            color: "#888888",
-          }}
-        >
+        <Text style={{ fontSize: 12, color: "#888888" }}>
           PM2.5: {kualitasUdara.pm25} µg/m³
           {" • "}
           PM10: {kualitasUdara.pm10} µg/m³
