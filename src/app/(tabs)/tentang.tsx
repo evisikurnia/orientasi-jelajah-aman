@@ -1,12 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { typeScale, spacing } from '../../constants/styles';
 
 export default function TentangScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      {/* 3. Terapkan accessibilityLabel pada judul */}
       <Text 
         style={styles.title} 
         accessibilityLabel="Judul Halaman Tentang"
@@ -18,7 +16,7 @@ export default function TentangScreen() {
       <View style={styles.content}>
         <Text style={styles.appName}>Aplikasi Kualitas Udara</Text>
         <Text style={styles.version}>Versi 1.0.0</Text>
-        <Text style={styles.author}>Pembuat: [Nama Anda]</Text>
+        <Text style={styles.author}>Pembuat: Eka Visi Kurnia</Text>
       </View>
     </SafeAreaView>
   );
@@ -27,27 +25,27 @@ export default function TentangScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.md, // Menggunakan spacing dari constants/styles
+    padding: 16,
     backgroundColor: '#ffffff',
   },
   title: {
-    fontSize: typeScale.header, // Menggunakan typeScale
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: spacing.lg,
+    marginBottom: 20,
   },
   content: {
-    gap: spacing.sm,
+    gap: 8,
   },
   appName: {
-    fontSize: typeScale.subheader,
+    fontSize: 18,
     fontWeight: '600',
   },
   version: {
-    fontSize: typeScale.body,
+    fontSize: 14,
     color: '#666666',
   },
   author: {
-    fontSize: typeScale.body,
+    fontSize: 14,
     color: '#333333',
   },
 });

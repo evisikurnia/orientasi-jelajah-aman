@@ -1,33 +1,35 @@
-import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { LaporanUdara } from "../../../types/cuaca";
+import { LaporanUdara } from "../types/cuaca";
 
-export default function IndikatorAQI(data: LaporanUdara) {
-  const getWarnaAQI = (tingkat: LaporanUdara["tingkat"]) => {
-    switch (tingkat) {
-      case "BAIK":
-        return "#22C55E"; // Hijau
-      case "SEDANG":
-        return "#EAB308"; // Kuning
-      case "TIDAK_SEHAT":
-        return "#EF4444"; // Merah
-      case "BERBAHAYA":
-        return "#7E22CE"; // Ungu
-      default:
-        return "#64748B";
-    }
-  };
+interface IndikatorAQIProps {
+  data: LaporanUdara;
+}
 
-  const warna = getWarnaAQI(data.tingkat);
+// Mapping warna sesuai status tingkat AQI
+const WARNA_AQI: Record<LaporanUdara["tingkat"], string> = {
+  BAIK: "#16a34a",        // ijo
+  SEDANG: "#d97706",      // Kuning aga Oren
+  TIDAK_SEHAT: "#dc2626", // Merah
+  BERBAHAYA: "#7e22ce",   // Ungu
+};
+
+export default function IndikatorAQI({ data }: IndikatorAQIProps) {
+  const warna = WARNA_AQI[data.tingkat] ?? "#000000";
 
   return (
-    <View style={[styles.card, { borderColor: warna }]}>
-      <Text style={styles.kota}>{data.kota}</Text>
-      <Text style={[styles.tingkat, { color: warna }]}>
-        {data.tingkat} (AQI: {data.indeksAQI})
+    <View style={styles.card}>
+      <Text style={styles.labelKota}>Kualitas Udara - {data.kota}</Text>
+      
+      {/* Teks nilai indeks dan status dengan warna dinamis */}
+      <Text style={[styles.indeks, { color: warna }]}>
+        AQI {data.indeksAQI} ({data.tingkat})
       </Text>
+
+      {/* Render teks tanggal jika properti opsional ada */}
       {data.diperbaruiPada && (
-        <Text style={styles.waktu}>Diperbarui: {data.diperbaruiPada}</Text>
+        <Text style={styles.diperbarui}>
+          Diperbarui pada: {data.diperbaruiPada}
+        </Text>
       )}
     </View>
   );
@@ -36,24 +38,21 @@ export default function IndikatorAQI(data: LaporanUdara) {
 const styles = StyleSheet.create({
   card: {
     padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: "#F4F7FA",
+    gap: 4,
   },
-  kota: {
-    fontSize: 18,
+  labelKota: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+  indeks: {
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#0F172A",
   },
-  tingkat: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginVertical: 4,
-  },
-  waktu: {
+  diperbarui: {
     fontSize: 12,
-    color: "#64748B",
+    color: "#9ca3af",
+    marginTop: 4,
   },
 });

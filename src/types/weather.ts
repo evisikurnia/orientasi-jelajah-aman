@@ -20,4 +20,6 @@ export interface DataKualitasUdara {
     indeksAQI: number;
     pm25: number;
     pm10: number;
+    kategori?: string;
+    tingkat?: string;
 }

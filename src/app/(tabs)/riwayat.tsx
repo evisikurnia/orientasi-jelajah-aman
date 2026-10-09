@@ -1,6 +1,6 @@
 // src/app/(tabs)/riwayat.tsx
 import { useState, useCallback } from "react";
-import { View, Text, Button, Alert } from "react-native";
+import { View, Text, Button, Alert, Platform } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,32 +16,39 @@ export default function TabRiwayat() {
     }, [])
   );
 
-  async function hapus(id: number) {
+  async function hapus(id: any) {
     await hapusFavorit(id);
-    setDaftarFavorit((prev) => prev.filter((k) => k.id !== id));
+    setDaftarFavorit((prev) => prev.filter((k) => String(k.id) !== String(id)));
   }
 
-  // 1. Tambahkan konfirmasi hapus menggunakan Alert.alert()
-  function konfirmasiHapus(id: number, namaKota: string) {
-    Alert.alert(
-      "Konfirmasi Hapus",
-      `Yakin hapus ${namaKota}?`,
-      [
+  // Konfirmasi hapus yang mendukung HP (Mobile) dan Browser Web
+  function konfirmasiHapus(id: any, namaKota: string) {
+    const pesan = `Yakin hapus ${namaKota}?`;
+
+    if (Platform.OS === "web") {
+      // Untuk Browser (localhost:8081)
+      const setuju = window.confirm(pesan);
+      if (setuju) {
+        hapus(id);
+      }
+    } else {
+      // Untuk HP / Mobile (Android & iOS)
+      Alert.alert("Konfirmasi Hapus", pesan, [
         { text: "Batal", style: "cancel" },
         {
           text: "Hapus",
           style: "destructive",
           onPress: () => hapus(id),
         },
-      ]
-    );
+      ]);
+    }
   }
 
   return (
     <SafeAreaView style={{ flex: 1, padding: 16, gap: 12 }}>
       <Text style={{ fontSize: 18, fontWeight: "bold" }}>Kota Favorit</Text>
 
-      {/* 2. Tampilkan jumlah favorit */}
+      {/* Indikator jumlah favorit */}
       <Text style={{ color: "#666666", fontWeight: "600" }}>
         Tersimpan {daftarFavorit.length} kota
       </Text>
@@ -55,6 +62,7 @@ export default function TabRiwayat() {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
+            paddingVertical: 4,
           }}
         >
           <Text>{kota.nama}</Text>
