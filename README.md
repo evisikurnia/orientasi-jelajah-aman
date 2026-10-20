@@ -54,3 +54,14 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Status Data Offline
+Aplikasi ini membedakan tiga kondisi data cuaca:
+
+Cache-segar: data tersimpan yang umurnya belum lewat 30 menit, langsung ditampilkan tanpa memanggil internet.
+
+Cache-basi: data tersimpan yang sudah lewat 30 menit tapi internet tidak tersedia, tetap ditampilkan sebagai cadangan dengan label peringatan.
+
+First-run offline: belum ada data tersimpan sama sekali dan internet tidak tersedia, sehingga aplikasi menampilkan pesan error.
+
+Label status ini penting agar pengguna tahu seberapa bisa diandalkan angka yang mereka lihat, terutama saat memutuskan aktivitas luar ruangan berdasarkan cuaca atau kualitas udara.

@@ -34,6 +34,7 @@ try {
 await simpanCache(kota, cuaca, kualitasUdara);
 } catch {
 
+
 // Gagal menyimpan cache tidak boleh merusak tampilan data yang sudah ada
 }
 return { cuaca, kualitasUdara, disimpanPada: Date.now(), sumber: "jaringan" };
