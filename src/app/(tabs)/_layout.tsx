@@ -1,7 +1,7 @@
 // src/app/(tabs)/_layout.tsx
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from "../../context/ThemeContext";
 
 export default function TabLayout() {
   const { colors } = useTheme();
@@ -25,7 +25,7 @@ export default function TabLayout() {
         options={{
           title: "Beranda",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <Ionicons name="home" size={size} color={color as string} />
           ),
         }}
       />
@@ -34,7 +34,7 @@ export default function TabLayout() {
         options={{
           title: "Riwayat",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time" size={size} color={color} />
+            <Ionicons name="time" size={size} color={color as string} />
           ),
         }}
       />
@@ -43,7 +43,7 @@ export default function TabLayout() {
         options={{
           title: "Pengaturan",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
+            <Ionicons name="settings" size={size} color={color as string} />
           ),
         }}
       />
@@ -52,7 +52,7 @@ export default function TabLayout() {
         options={{
           title: "Tentang",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="information-circle" size={size} color={color} />
+            <Ionicons name="information-circle" size={size} color={color as string} />
           ),
         }}
       />
