@@ -1,17 +1,13 @@
 // src/app/(tabs)/riwayat.tsx
 import { useState, useCallback, useMemo } from "react";
-import {
-  View, Text, Alert, Platform, ScrollView, TouchableOpacity, StyleSheet,
-} from "react-native";
+import { View, Text, Alert, Platform, ScrollView, TouchableOpacity, StyleSheet, } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "../../context/ThemeContext";
 import { ambilSemuaFavorit, hapusFavorit } from "../../services/favoritStorage";
-import {
-  ambilRiwayat, ambilCache, hapusSemuaCacheCuaca, ItemRiwayat, CacheCuaca,
-} from "../../services/riwayatCache";
+import { ambilRiwayat, ambilCache, hapusSemuaCacheCuaca, ItemRiwayat, CacheCuaca, } from "../../services/riwayatCache";
 import { KotaFavorit } from "../../types/favorit";
 
 export default function TabRiwayat() {
@@ -106,8 +102,8 @@ export default function TabRiwayat() {
 
         {riwayat.length === 0 && <Text style={styles.kosong}>Belum ada riwayat pencarian</Text>}
 
-        {riwayat.map((k) => (
-          <View key={`riwayat-${k.id}`} style={styles.baris}>
+        {riwayat.map((k, index) => (
+          <View key={`riwayat-${k.id}-${index}`} style={styles.baris}>
             <TouchableOpacity
               style={{ flex: 1 }}
               onPress={() => bukaKota(k.id, k.nama, k.latitude, k.longitude)}
@@ -134,8 +130,8 @@ export default function TabRiwayat() {
 
         {daftarFavorit.length === 0 && <Text style={styles.kosong}>Belum ada kota favorit</Text>}
 
-        {daftarFavorit.map((k) => (
-          <View key={`fav-${k.id}`} style={styles.baris}>
+        {daftarFavorit.map((k, index) => (
+          <View key={`fav-${k.id}-${index}`} style={styles.baris}>
             <TouchableOpacity
               style={{ flex: 1 }}
               onPress={() => bukaKota(k.id, k.nama, k.latitude, k.longitude)}
