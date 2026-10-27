@@ -31,4 +31,4 @@ export async function hapusFavorit(id: number | string): Promise<void> {
     const daftar = await ambilSemuaFavorit();
     const daftarBaru = daftar.filter((k) => String(k.id) !== String(id));
     await AsyncStorage.setItem(KUNCI_PENYIMPANAN, JSON.stringify(daftarBaru));
-}
+} 

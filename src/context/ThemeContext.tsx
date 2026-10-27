@@ -19,11 +19,11 @@ const lightColors = {
 };
 
 const darkColors = {
-  background: "#0F172A",
-  card: "#1E293B",
+  background: "#000000",
+  card: "#121212",
   text: "#F1F5F9",
   subtext: "#94A3B8",
-  border: "#334155",
+  border: "#2A2A2A",
   primary: "#2196F3",
   danger: "#F87171",
   disabled: "#475569",
